@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import axios from "axios";
+import { apiService } from "../services/apiService";
 
 const Container = styled.div`
   padding: 40px;
@@ -150,10 +150,9 @@ function MarketSentiment() {
     setLoading(true);
     setError("");
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
-      const res = await axios.get(`${apiUrl}/api/sentiment`);
-      setScore(res.data.score);
-      setLabel(res.data.label);
+      const data = await apiService.fetchSentiment();
+      setScore(data.score);
+      setLabel(data.label);
     } catch (e) {
       setError("Failed to fetch sentiment.");
       setScore(null);

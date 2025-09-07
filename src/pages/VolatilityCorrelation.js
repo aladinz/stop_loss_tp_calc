@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import axios from "axios";
+import { apiService } from "../services/apiService";
 
 const Container = styled.div`
   padding: 40px;
@@ -152,15 +152,7 @@ function VolatilityCorrelation() {
     setLoading(true);
     setError("");
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
-      const url1 = `${apiUrl}/api/history?symbol=${symbol1}`;
-      const url2 = `${apiUrl}/api/history?symbol=${symbol2}`;
-      const [res1, res2] = await Promise.all([
-        axios.get(url1),
-        axios.get(url2)
-      ]);
-      const prices1 = res1.data.prices;
-      const prices2 = res2.data.prices;
+      const { data1: prices1, data2: prices2 } = await apiService.fetchHistory(symbol1, symbol2);
       setData1(prices1);
       setData2(prices2);
       // Calculate metrics

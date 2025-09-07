@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import StockInfo from "./StockInfo";
 import CalculatorPanel from "./CalculatorPanel";
+import { apiService } from "./services/apiService";
 
 const Container = styled.div`
   max-width: 900px;
@@ -117,11 +118,7 @@ function App() {
     setLoading(true);
     setError("");
     try {
-      // Use environment variable for API URL
-      const apiUrl = process.env.REACT_APP_API_URL || '';
-      const url = `${apiUrl}/api/quote?symbol=${symbol}`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await apiService.fetchQuote(symbol);
       if (data.price) {
         setStockData({
           symbol: data.symbol,

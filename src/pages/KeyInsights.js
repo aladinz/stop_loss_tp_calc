@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import axios from "axios";
+import { apiService } from "../services/apiService";
 
 const Container = styled.div`
   padding: 40px;
@@ -94,9 +94,8 @@ function KeyInsights() {
       setLoading(true);
       setError("");
       try {
-        const apiUrl = process.env.REACT_APP_API_URL || '';
-        const res = await axios.get(`${apiUrl}/api/news`);
-        setInsights(res.data.articles);
+        const data = await apiService.fetchNews();
+        setInsights(data.articles);
       } catch (e) {
         setError("Failed to fetch news.");
       }
