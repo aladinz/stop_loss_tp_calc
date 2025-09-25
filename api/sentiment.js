@@ -50,11 +50,18 @@ async function fetchStockMarketSentiment() {
       .filter(result => result.status === 'fulfilled' && result.value)
       .map(result => result.value);
     
-    if (validData.length >= 2) {
+    console.log('Valid data symbols:', validData.map(d => d.symbol));
+    
+    // Check if we have VIX data - crucial for sentiment calculation
+    const hasVIX = validData.some(d => d.symbol === 'VIX');
+    
+    if (validData.length >= 2 && hasVIX) {
       return calculateSentimentFromMarketData(validData);
     }
     
-    throw new Error('Insufficient market data');
+    // If no VIX or insufficient data, use fallback
+    console.log('Missing VIX data or insufficient market data. VIX available:', hasVIX);
+    throw new Error(hasVIX ? 'Insufficient market data' : 'VIX data unavailable - using fallback');
   } catch (error) {
     console.log('Stock market data fetch failed:', error.message);
     return null;
