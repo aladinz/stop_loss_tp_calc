@@ -15,37 +15,55 @@ const getApiBase = () => {
 
 export const apiService = {
   async fetchQuote(symbol) {
+    const apiBase = getApiBase();
+    
+    // Try Yahoo Finance first for more accurate real-time data
     try {
-      const apiBase = getApiBase();
-      const url = `${apiBase}/api/quote?symbol=${symbol}`;
-      console.log('Fetching from URL:', url);
+      const yahooUrl = `${apiBase}/api/yahoo-quote?symbol=${symbol}`;
+      console.log('Trying Yahoo Finance API:', yahooUrl);
       
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const yahooResponse = await fetch(yahooUrl, {
+        headers: { 'Content-Type': 'application/json' },
       });
       
-      if (!response.ok) {
-        console.error('Response not OK:', response.status, response.statusText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (yahooResponse.ok) {
+        const yahooData = await yahooResponse.json();
+        console.log('Yahoo Finance Response:', yahooData);
+        return yahooData;
+      }
+    } catch (error) {
+      console.warn('Yahoo Finance API failed:', error.message);
+    }
+    
+    // Fallback to Alpha Vantage
+    try {
+      const alphaUrl = `${apiBase}/api/quote?symbol=${symbol}`;
+      console.log('Fallback to Alpha Vantage API:', alphaUrl);
+      
+      const alphaResponse = await fetch(alphaUrl, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (!alphaResponse.ok) {
+        console.error('Alpha Vantage Response not OK:', alphaResponse.status);
+        throw new Error(`HTTP error! status: ${alphaResponse.status}`);
       }
       
-      const data = await response.json();
-      console.log('API Response:', data);
-      return data;
+      const alphaData = await alphaResponse.json();
+      console.log('Alpha Vantage Response:', alphaData);
+      return alphaData;
     } catch (error) {
-      console.error('Error fetching stock quote:', error);
-      console.log('Falling back to mock data for symbol:', symbol);
+      console.error('Both APIs failed, using mock data:', error);
       
-      // Fallback to mock data if API fails
+      // Fallback to mock data if both APIs fail
       return {
         symbol: symbol.toUpperCase(),
         price: Math.random() * 300 + 50, // Random price between 50-350
         name: `${symbol.toUpperCase()} Corporation`,
         change: (Math.random() - 0.5) * 10, // Random change between -5 to +5
-        changePercent: (Math.random() - 0.5) * 10, // Random percent change
-        raw: { note: 'Using fallback mock data due to API error' }
+        changePercent: `${((Math.random() - 0.5) * 10).toFixed(2)}%`,
+        source: 'Mock Data (APIs unavailable)',
+        raw: { note: 'Using fallback mock data due to API errors' }
       };
     }
   },
