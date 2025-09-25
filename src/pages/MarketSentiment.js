@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { apiService } from "../services/apiService";
 import { useTheme } from "../contexts/ThemeContext";
+// Force deployment update - v2.1
 
 const pulse = keyframes`
   0%, 100% { opacity: 1; }
