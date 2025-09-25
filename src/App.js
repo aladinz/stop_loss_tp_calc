@@ -140,8 +140,11 @@ function App() {
     setLoading(true);
     setError("");
     try {
+      console.log('Fetching stock data for:', symbol);
       const data = await apiService.fetchQuote(symbol);
-      if (data.price) {
+      console.log('Received data:', data);
+      
+      if (data && data.price) {
         setStockData({
           symbol: data.symbol,
           regularMarketPrice: data.price,
@@ -149,11 +152,13 @@ function App() {
           raw: data.raw
         });
       } else {
-        setError("Ticker not found or API limit reached.");
+        console.error('Invalid data received:', data);
+        setError(`Ticker "${symbol}" not found or API limit reached. Please try again.`);
         setStockData(null);
       }
     } catch (e) {
-      setError("Failed to fetch stock data.");
+      console.error('Error in fetchStockData:', e);
+      setError(`Failed to fetch stock data for "${symbol}". ${e.message || 'Please try again.'}`);
       setStockData(null);
     }
     setLoading(false);
