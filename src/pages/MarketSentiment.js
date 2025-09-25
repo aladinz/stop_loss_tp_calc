@@ -520,23 +520,30 @@ function MarketSentiment() {
       return [];
     }
     
+    console.log('Full marketData structure:', marketData);
+    
     // Check different possible data structures
     let dataArray = null;
     if (marketData.marketData && Array.isArray(marketData.marketData)) {
       dataArray = marketData.marketData;
+      console.log('Using marketData.marketData:', dataArray);
     } else if (marketData.factors && Array.isArray(marketData.factors)) {
       // Some APIs might return factors array directly
       dataArray = marketData.factors;
+      console.log('Using marketData.factors:', dataArray);
     } else if (Array.isArray(marketData)) {
       dataArray = marketData;
+      console.log('Using marketData directly:', dataArray);
     }
     
     if (!dataArray || dataArray.length === 0) {
       console.log('No market data array found. Available keys:', Object.keys(marketData));
+      console.log('Marketdata.marketData exists?', !!marketData.marketData);
+      console.log('Marketdata.factors exists?', !!marketData.factors);
       return [];
     }
     
-    console.log('Market data array:', dataArray);
+    console.log('Market data array found:', dataArray);
     
     // Helper function to get impact based on change percentage
     const getImpact = (changeStr, symbol, item) => {
@@ -634,23 +641,84 @@ function MarketSentiment() {
   const getMarketFactorsWithFallback = () => {
     const factors = getMarketFactors();
     
+    console.log('getMarketFactors returned:', factors.length, 'factors');
+    console.log('Current marketData:', marketData);
+    
+    // FORCE USE REAL VIX DATA if we have sentiment data - bypass the normal factor check
+    if (score !== null && marketData && marketData.marketData) {
+      console.log('Force using real market data since we have sentiment score');
+      const vixData = marketData.marketData.find(d => d.symbol === 'VIX');
+      const spyData = marketData.marketData.find(d => d.symbol === 'SPY');
+      const qqqData = marketData.marketData.find(d => d.symbol === 'QQQ');
+      const diaData = marketData.marketData.find(d => d.symbol === 'DIA');
+      
+      if (vixData) {
+        console.log('Using REAL VIX data:', vixData.currentPrice);
+        return [
+          spyData ? { 
+            title: 'S&P 500 Performance', 
+            value: `${spyData.changePercent > 0 ? '+' : ''}${spyData.changePercent.toFixed(2)}%`, 
+            impact: spyData.changePercent > 1 ? 'Bullish' : spyData.changePercent < -1 ? 'Bearish' : 'Neutral'
+          } : null,
+          qqqData ? { 
+            title: 'NASDAQ Performance', 
+            value: `${qqqData.changePercent > 0 ? '+' : ''}${qqqData.changePercent.toFixed(2)}%`, 
+            impact: qqqData.changePercent > 1 ? 'Tech Bullish' : qqqData.changePercent < -1 ? 'Tech Bearish' : 'Neutral'
+          } : null,
+          diaData ? { 
+            title: 'Dow Jones Performance', 
+            value: `${diaData.changePercent > 0 ? '+' : ''}${diaData.changePercent.toFixed(2)}%`, 
+            impact: diaData.changePercent > 1 ? 'Value Bullish' : diaData.changePercent < -1 ? 'Value Bearish' : 'Neutral'
+          } : null,
+          { 
+            title: 'VIX (Fear Index)', 
+            value: vixData.currentPrice.toFixed(1) + ' (REAL)', 
+            impact: vixData.currentPrice > 30 ? 'High Fear' : vixData.currentPrice < 20 ? 'Low Fear' : 'Moderate Fear'
+          }
+        ].filter(item => item !== null);
+      }
+    }
+    
     // If no real data, provide simulated market indicators based on current conditions
     if (factors.length === 0) {
+      console.log('No real factors found, using fallback data');
       const now = new Date();
       const isMarketClosed = getMarketStatus().status === 'Closed';
       
-      // If API fails, show realistic mock data for demonstration
-      if (score !== null && !isMarketClosed) {
+      // If we have sentiment data, use REAL market data when available, otherwise realistic mock data
+      if (score !== null) {
+        console.log('Have sentiment score:', score, 'Market closed:', isMarketClosed);
+        // Check if we have real market data to use instead of generating mock data
+        let realVixValue = null;
+        if (marketData && marketData.marketData) {
+          console.log('Checking marketData.marketData for VIX:', marketData.marketData);
+          const vixData = marketData.marketData.find(d => d.symbol === 'VIX');
+          if (vixData && vixData.currentPrice) {
+            realVixValue = vixData.currentPrice;
+            console.log('Found real VIX value:', realVixValue);
+          } else {
+            console.log('VIX data not found in marketData.marketData');
+          }
+        } else {
+          console.log('No marketData.marketData available');
+        }
+        
         // Generate realistic mock data based on sentiment score
         const spyChange = (score - 50) * 0.08 + (Math.random() - 0.5) * 2; // -4% to +4% range
         const nasdaqChange = spyChange * 1.2 + (Math.random() - 0.5) * 1; // More volatile
         const dowChange = spyChange * 0.8 + (Math.random() - 0.5) * 1; // Less volatile
-        const vixLevel = Math.max(10, Math.min(50, 25 - (score - 50) * 0.3 + Math.random() * 5));
+        const vixLevel = realVixValue || Math.max(10, Math.min(50, 25 - (score - 50) * 0.3 + Math.random() * 5));
         
         const getImpactFromChange = (change, type) => {
           if (change > 1) return type === 'vix' ? 'Low Fear' : 'Bullish';
           if (change < -1) return type === 'vix' ? 'High Fear' : 'Bearish';
           return type === 'vix' ? 'Moderate Fear' : 'Neutral';
+        };
+        
+        const getVixImpact = (vixLevel) => {
+          if (vixLevel > 30) return 'High Fear';
+          if (vixLevel < 20) return 'Low Fear';
+          return 'Moderate Fear';
         };
         
         return [
@@ -671,8 +739,8 @@ function MarketSentiment() {
           },
           { 
             title: 'VIX (Fear Index)', 
-            value: vixLevel.toFixed(1), 
-            impact: getImpactFromChange(0, 'vix') // VIX impact based on level, not change
+            value: vixLevel.toFixed(1) + (realVixValue ? ' (Real)' : ' (Est)'), 
+            impact: getVixImpact(vixLevel) // Use proper VIX impact based on actual level
           }
         ];
       }
