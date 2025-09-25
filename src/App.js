@@ -57,7 +57,8 @@ const Label = styled.label`
   font-size: 1rem;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #374151;
+  color: ${props => props.theme.isDarkMode ? props.theme.colors.dark.text : props.theme.colors.light.text};
+  transition: color 0.3s ease;
 `;
 const Input = styled.input`
   padding: 12px 20px;
@@ -111,18 +112,20 @@ const SubmitButton = styled.button`
 const LoadingText = styled.p`
   text-align: center;
   font-size: 1.1rem;
-  color: #6366f1;
+  color: ${props => props.theme.isDarkMode ? props.theme.colors.dark.primary : props.theme.colors.light.primary};
   font-weight: 600;
+  transition: color 0.3s ease;
 `;
 const ErrorText = styled.p`
-  color: #ef4444;
+  color: ${props => props.theme.isDarkMode ? props.theme.colors.dark.error : props.theme.colors.light.error};
   text-align: center;
   font-size: 1.1rem;
   font-weight: 600;
-  background: #fef2f2;
+  background: ${props => props.theme.isDarkMode ? 'rgba(252, 129, 129, 0.1)' : '#fef2f2'};
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid #fecaca;
+  border: 1px solid ${props => props.theme.isDarkMode ? 'rgba(252, 129, 129, 0.2)' : '#fecaca'};
+  transition: all 0.3s ease;
 `;
 
 function App() {
@@ -167,7 +170,7 @@ function App() {
       <Subtitle theme={theme}>Professional tools for smart risk management in trading</Subtitle>
       <Form onSubmit={handleSubmit} theme={theme}>
         <InputGroup>
-          <Label htmlFor="ticker">Enter Ticker Symbol:</Label>
+          <Label htmlFor="ticker" theme={theme}>Enter Ticker Symbol:</Label>
           <Input
             id="ticker"
             value={ticker}
@@ -178,7 +181,7 @@ function App() {
           />
         </InputGroup>
         <InputGroup>
-          <Label htmlFor="entry">Your Entry Price:</Label>
+          <Label htmlFor="entry" theme={theme}>Your Entry Price:</Label>
           <Input
             id="entry"
             type="number"
@@ -193,8 +196,8 @@ function App() {
           Fetch Stock Data
         </SubmitButton>
       </Form>
-      {loading && <LoadingText>Loading stock data...</LoadingText>}
-      {error && <ErrorText>{error}</ErrorText>}
+      {loading && <LoadingText theme={theme}>Loading stock data...</LoadingText>}
+      {error && <ErrorText theme={theme}>{error}</ErrorText>}
       {stockData && (
         <>
           <StockInfo stockData={stockData} />

@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import ATRCalculator from "./ATRCalculator";
 import PercentageCalculator from "./PercentageCalculator";
+import { useTheme } from "./contexts/ThemeContext";
 
 const PanelContainer = styled.div`
   display: grid;
@@ -17,15 +18,18 @@ const SectionTitle = styled.h2`
   font-weight: 700;
   margin-bottom: 16px;
   text-align: center;
+  color: ${props => props.theme.isDarkMode ? props.theme.colors.dark.text : props.theme.colors.light.text};
+  transition: color 0.3s ease;
 `;
 
 function CalculatorPanel({ entryPrice, stockData }) {
+  const theme = useTheme();
   // Simulate ATR value for demo (in real app, fetch from API)
   const atrValue = 4.8;
 
   return (
     <>
-      <SectionTitle>TAKE PROFIT CALCULATORS</SectionTitle>
+      <SectionTitle theme={theme}>TAKE PROFIT CALCULATORS</SectionTitle>
       <PanelContainer>
         <ATRCalculator
           type="tp"
@@ -37,7 +41,7 @@ function CalculatorPanel({ entryPrice, stockData }) {
           entryPrice={entryPrice}
         />
       </PanelContainer>
-      <SectionTitle>STOP LOSS CALCULATORS</SectionTitle>
+      <SectionTitle theme={theme}>STOP LOSS CALCULATORS</SectionTitle>
       <PanelContainer>
         <ATRCalculator
           type="sl"
