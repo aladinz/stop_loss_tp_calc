@@ -1,94 +1,112 @@
-// Simplified API functions for static deployment
-const API_BASE = '';
-
-// Mock API responses for static deployment
-const mockStockData = {
-  symbol: 'AAPL',
-  price: 175.43,
-  name: 'Apple Inc.',
-  raw: { '05. price': '175.43' }
-};
-
-const mockNews = [
-  {
-    title: "Markets Rally on Strong Economic Data",
-    description: "Stock markets continue their upward trend as economic indicators show positive growth.",
-    source: { name: "Financial News" },
-    url: "#"
-  },
-  {
-    title: "Tech Sector Leads Market Gains",
-    description: "Technology stocks are outperforming other sectors with significant gains across major indices.",
-    source: { name: "Market Watch" },
-    url: "#"
-  },
-  {
-    title: "Federal Reserve Maintains Interest Rates",
-    description: "The Federal Reserve decided to keep interest rates unchanged, supporting market stability.",
-    source: { name: "Economic Times" },
-    url: "#"
+// Real-time API service for stock data using Vercel serverless functions
+// Automatically detects if running locally or on Vercel deployment
+const getApiBase = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use current domain for production, localhost for development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    } else {
+      // Production: use current domain
+      return `${window.location.protocol}//${window.location.host}`;
+    }
   }
-];
-
-// Check if we're in a local development environment
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  return '';
+};
 
 export const apiService = {
   async fetchQuote(symbol) {
-    if (isLocal) {
-      // Use local API when running locally
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/quote?symbol=${symbol}`);
-      return await response.json();
-    } else {
-      // Use mock data for static deployment
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-      return {
-        ...mockStockData,
-        symbol: symbol.toUpperCase(),
-        name: `${symbol.toUpperCase()} Corporation`
-      };
+    try {
+      const apiBase = getApiBase();
+      const url = `${apiBase}/api/quote?symbol=${symbol}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching stock quote:', error);
+      throw new Error(`Failed to fetch stock data for ${symbol}. ${error.message}`);
     }
   },
 
   async fetchNews() {
-    if (isLocal) {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/news`);
-      return await response.json();
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      return { articles: mockNews };
+    try {
+      const apiBase = getApiBase();
+      const url = `${apiBase}/api/news`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      return {
+        articles: [
+          {
+            title: "Unable to fetch live news",
+            description: "Please check your internet connection or try again later.",
+            source: { name: "System Message" },
+            url: "#"
+          }
+        ]
+      };
     }
   },
 
   async fetchSentiment() {
-    if (isLocal) {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/sentiment`);
-      return await response.json();
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      const score = Math.floor(Math.random() * 60) + 20; // 20-80 range
+    try {
+      const apiBase = getApiBase();
+      const url = `${apiBase}/api/sentiment`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching sentiment:', error);
+      // Return fallback sentiment data if API fails
+      const score = Math.floor(Math.random() * 40) + 30; // 30-70 range
       let label = '';
       if (score < 30) label = 'Extreme Fear';
       else if (score < 50) label = 'Fear';
       else if (score < 70) label = 'Greed';
       else label = 'Extreme Greed';
-      return { score, label, source: 'Demo Data' };
+      return { score, label, source: 'Fallback Data' };
     }
   },
 
   async fetchHistory(symbol1, symbol2) {
-    if (isLocal) {
+    try {
+      const apiBase = getApiBase();
       const [res1, res2] = await Promise.all([
-        fetch(`${process.env.REACT_APP_API_URL || ''}/api/history?symbol=${symbol1}`),
-        fetch(`${process.env.REACT_APP_API_URL || ''}/api/history?symbol=${symbol2}`)
+        fetch(`${apiBase}/api/history?symbol=${symbol1}`),
+        fetch(`${apiBase}/api/history?symbol=${symbol2}`)
       ]);
+      
+      if (!res1.ok || !res2.ok) {
+        throw new Error('Failed to fetch historical data');
+      }
+      
+      const data1 = await res1.json();
+      const data2 = await res2.json();
+      
       return {
-        data1: (await res1.json()).prices,
-        data2: (await res2.json()).prices
+        data1: data1.prices,
+        data2: data2.prices
       };
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      // Generate mock historical data
+    } catch (error) {
+      console.error('Error fetching historical data:', error);
+      // Return fallback historical data if API fails
       const generatePrices = (basePrice, days = 30) => {
         const prices = [];
         let price = basePrice;

@@ -80,28 +80,6 @@ app.get('/api/history', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch historical data from Alpha Vantage' });
   }
 });
-app.get('/api/quote', async (req, res) => {
-  const symbol = req.query.symbol;
-  if (!symbol) return res.status(400).json({ error: 'Missing symbol' });
-  try {
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_KEY}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    // Format response for frontend compatibility
-    if (data['Global Quote'] && data['Global Quote']['05. price']) {
-      res.json({
-        symbol: symbol,
-        price: parseFloat(data['Global Quote']['05. price']),
-        name: symbol,
-        raw: data['Global Quote']
-      });
-    } else {
-      res.status(404).json({ error: 'Symbol not found or API limit reached', raw: data });
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch from Alpha Vantage' });
-  }
-});
 
 // Market Sentiment (CNN Fear & Greed Index) endpoint
 app.get('/api/sentiment', async (req, res) => {
