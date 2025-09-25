@@ -17,6 +17,7 @@ export default async function handler(req, res) {
     
     if (stockSentiment) {
       console.log(`Stock sentiment calculated: ${stockSentiment.score} (${stockSentiment.label})`);
+      console.log('Market data received:', stockSentiment.marketData);
       return res.json(stockSentiment);
     }
     
@@ -24,10 +25,12 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('Error fetching stock sentiment:', error);
+    console.log('Switching to enhanced fallback data...');
     
-    // Fallback: Use market-aware simulated data
+    // Fallback: Use market-aware simulated data that matches local behavior
     const marketAwareSentiment = getMarketAwareFallback();
     console.log(`Using fallback sentiment: ${marketAwareSentiment.score} (${marketAwareSentiment.label})`);
+    console.log('Fallback market data:', marketAwareSentiment.marketData);
     
     return res.json(marketAwareSentiment);
   }
@@ -94,8 +97,11 @@ function calculateSentimentFromMarketData(marketData) {
   let sentimentScore = 50; // Start neutral
   let factors = [];
   
+  console.log('Calculating sentiment from market data:', marketData.map(d => ({ symbol: d.symbol, price: d.currentPrice, change: d.changePercent })));
+  
   // Analyze market performance
   const avgChange = marketData.reduce((sum, data) => sum + data.changePercent, 0) / marketData.length;
+  console.log('Average market change:', avgChange.toFixed(2) + '%');
   
   // Major market movement factor (most important)
   if (avgChange > 2) {
@@ -115,28 +121,39 @@ function calculateSentimentFromMarketData(marketData) {
   // VIX factor (volatility index - fear gauge)
   const vixData = marketData.find(d => d.symbol === 'VIX');
   if (vixData) {
+    console.log('VIX data found:', vixData.currentPrice);
     if (vixData.currentPrice > 30) {
       sentimentScore -= 20;
       factors.push(`High volatility (VIX: ${vixData.currentPrice.toFixed(1)})`);
+      console.log('Applied VIX penalty: -20 (High volatility)');
     } else if (vixData.currentPrice > 20) {
       sentimentScore -= 10;
       factors.push(`Elevated volatility (VIX: ${vixData.currentPrice.toFixed(1)})`);
+      console.log('Applied VIX penalty: -10 (Elevated volatility)');
     } else if (vixData.currentPrice < 15) {
       sentimentScore += 10;
       factors.push(`Low volatility (VIX: ${vixData.currentPrice.toFixed(1)})`);
+      console.log('Applied VIX bonus: +10 (Low volatility)');
+    } else {
+      console.log('VIX in neutral range (15-20), no adjustment');
     }
+  } else {
+    console.log('No VIX data found in market data');
   }
   
   // Clamp score between 0-100
   sentimentScore = Math.max(0, Math.min(100, Math.round(sentimentScore)));
+  console.log('Final sentiment score:', sentimentScore);
   
   // Determine label
   let label = '';
   if (sentimentScore < 25) label = 'Extreme Fear';
-  else if (sentimentScore < 45) label = 'Fear';
-  else if (sentimentScore < 65) label = 'Neutral';
-  else if (sentimentScore < 85) label = 'Greed';
+  else if (sentimentScore < 50) label = 'Fear';
+  else if (sentimentScore < 75) label = 'Neutral';
+  else if (sentimentScore < 90) label = 'Greed';
   else label = 'Extreme Greed';
+  
+  console.log('Final sentiment label:', label);
   
   return {
     score: sentimentScore,
