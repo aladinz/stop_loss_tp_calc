@@ -145,7 +145,11 @@ function calculateSentimentFromMarketData(marketData) {
     factors,
     marketData: marketData.map(d => ({
       symbol: d.symbol,
-      change: `${d.changePercent > 0 ? '+' : ''}${d.changePercent.toFixed(2)}%`
+      change: d.symbol === 'VIX' ? 
+        d.currentPrice.toFixed(2) : 
+        `${d.changePercent > 0 ? '+' : ''}${d.changePercent.toFixed(2)}%`,
+      currentPrice: d.currentPrice,
+      changePercent: d.changePercent
     })),
     timestamp: new Date().toISOString()
   };
