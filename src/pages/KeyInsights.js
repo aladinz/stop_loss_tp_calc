@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { apiService } from "../services/apiService";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Container = styled.div`
   padding: 40px;
@@ -161,7 +161,7 @@ function KeyInsights() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [newsData, setNewsData] = useState(null);
-  const { theme } = useContext(ThemeContext);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchNews = async () => {
