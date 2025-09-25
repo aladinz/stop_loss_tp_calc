@@ -1,16 +1,38 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { useTheme } from "./contexts/ThemeContext";
+import ThemeToggle from "./components/ThemeToggle";
 
 const Nav = styled.nav`
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  padding: 20px 0;
+  background: ${props => props.theme.isDarkMode 
+    ? 'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)' 
+    : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'};
+  padding: 20px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 24px ${props => props.theme.isDarkMode 
+    ? 'rgba(0, 0, 0, 0.3)' 
+    : 'rgba(99, 102, 241, 0.3)'};
+  border-bottom: 1px solid ${props => props.theme.isDarkMode 
+    ? props.theme.colors.dark.border 
+    : props.theme.colors.light.border};
+  transition: all 0.3s ease;
+`;
+
+const NavLinks = styled.div`
+  display: flex;
   gap: 8px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-wrap: wrap;
+  justify-content: center;
+  flex: 1;
+`;
+
+const ThemeToggleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 const NavLink = styled(Link)`
   color: white;
@@ -40,14 +62,21 @@ const NavLink = styled(Link)`
 `;
 
 function Navigation() {
+  const theme = useTheme();
+
   return (
-    <Nav>
-      <NavLink to="/">Home</NavLink>
-      <NavLink to="/portfolio">Portfolio Dashboard</NavLink>
-  <NavLink to="/trailing-stop">Trailing Stop</NavLink>
-  <NavLink to="/volatility-correlation">Volatility & Correlation</NavLink>
-  <NavLink to="/market-sentiment">Market Fear & Greed</NavLink>
-  <NavLink to="/key-insights">Key Insights</NavLink>
+    <Nav theme={theme}>
+      <NavLinks>
+        <NavLink to="/">Home</NavLink>
+        <NavLink to="/portfolio">Portfolio Dashboard</NavLink>
+        <NavLink to="/trailing-stop">Trailing Stop</NavLink>
+        <NavLink to="/volatility-correlation">Volatility & Correlation</NavLink>
+        <NavLink to="/market-sentiment">Market Fear & Greed</NavLink>
+        <NavLink to="/key-insights">Key Insights</NavLink>
+      </NavLinks>
+      <ThemeToggleContainer>
+        <ThemeToggle />
+      </ThemeToggleContainer>
     </Nav>
   );
 }

@@ -1,8 +1,17 @@
 body {
   margin: 0;
   font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  transition: all 0.3s ease;
+}
+
+body.light-mode {
   background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
   color: #222;
+}
+
+body.dark-mode {
+  background: linear-gradient(120deg, #1a202c 0%, #2d3748 100%);
+  color: #f7fafc;
 }
 
 #root {

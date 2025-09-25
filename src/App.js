@@ -3,13 +3,15 @@ import styled from "styled-components";
 import StockInfo from "./StockInfo";
 import CalculatorPanel from "./CalculatorPanel";
 import { apiService } from "./services/apiService";
+import { useTheme } from "./contexts/ThemeContext";
 
 const Container = styled.div`
   max-width: 900px;
   margin: 0 auto;
   padding: 32px 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  background: ${props => props.theme.isDarkMode ? props.theme.colors.dark.background : props.theme.colors.light.background};
   min-height: 100vh;
+  transition: all 0.3s ease;
 `;
 const Title = styled.h1`
   font-size: 3rem;
@@ -17,17 +19,21 @@ const Title = styled.h1`
   text-align: center;
   margin-bottom: 8px;
   letter-spacing: -1px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+  background: ${props => props.theme.isDarkMode 
+    ? 'linear-gradient(135deg, #9f7aea 0%, #667eea 50%, #68d391 100%)' 
+    : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)'};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  transition: all 0.3s ease;
 `;
 const Subtitle = styled.p`
   text-align: center;
   font-size: 1.2rem;
-  color: #64748b;
+  color: ${props => props.theme.isDarkMode ? props.theme.colors.dark.textSecondary : props.theme.colors.light.textSecondary};
   margin-bottom: 40px;
   font-weight: 500;
+  transition: color 0.3s ease;
 `;
 const Form = styled.form`
   display: flex;
@@ -35,11 +41,12 @@ const Form = styled.form`
   justify-content: center;
   margin-bottom: 40px;
   flex-wrap: wrap;
-  background: white;
+  background: ${props => props.theme.isDarkMode ? props.theme.colors.dark.cardBackground : props.theme.colors.light.cardBackground};
   padding: 32px;
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px ${props => props.theme.isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(99, 102, 241, 0.15)'};
+  border: 1px solid ${props => props.theme.isDarkMode ? props.theme.colors.dark.border : props.theme.colors.light.border};
+  transition: all 0.3s ease;
 `;
 const InputGroup = styled.div`
   display: flex;
@@ -55,23 +62,30 @@ const Label = styled.label`
 const Input = styled.input`
   padding: 12px 20px;
   border-radius: 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid ${props => props.theme.isDarkMode ? '#4a5568' : '#e5e7eb'};
   font-size: 1.1rem;
-  background: #f9fafb;
+  background: ${props => props.theme.isDarkMode ? '#2d3748' : '#f9fafb'};
+  color: ${props => props.theme.isDarkMode ? '#f7fafc' : '#374151'};
   min-width: 200px;
   transition: all 0.3s ease;
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: ${props => props.theme.isDarkMode ? '#9f7aea' : '#6366f1'};
+    background: ${props => props.theme.isDarkMode ? '#4a5568' : 'white'};
+    box-shadow: 0 0 0 3px ${props => props.theme.isDarkMode ? 'rgba(159, 122, 234, 0.1)' : 'rgba(99, 102, 241, 0.1)'};
+  }
+  
+  &::placeholder {
+    color: ${props => props.theme.isDarkMode ? '#a0aec0' : '#9ca3af'};
   }
 `;
 const SubmitButton = styled.button`
   padding: 12px 32px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: ${props => props.theme.isDarkMode 
+    ? 'linear-gradient(135deg, #9f7aea 0%, #667eea 100%)' 
+    : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'};
   color: white;
   font-weight: 700;
   border: none;
@@ -79,11 +93,15 @@ const SubmitButton = styled.button`
   cursor: pointer;
   margin-top: 24px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 16px ${props => props.theme.isDarkMode 
+    ? 'rgba(159, 122, 234, 0.3)' 
+    : 'rgba(99, 102, 241, 0.3)'};
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 8px 24px ${props => props.theme.isDarkMode 
+      ? 'rgba(159, 122, 234, 0.4)' 
+      : 'rgba(99, 102, 241, 0.4)'};
   }
   
   &:active {
@@ -108,6 +126,7 @@ const ErrorText = styled.p`
 `;
 
 function App() {
+  const theme = useTheme();
   const [ticker, setTicker] = useState("NVDA");
   const [entryPrice, setEntryPrice] = useState(162.0);
   const [stockData, setStockData] = useState(null);
@@ -143,10 +162,10 @@ function App() {
   };
 
   return (
-    <Container>
-      <Title>Stop Loss & Take Profit Calculators</Title>
-      <Subtitle>Professional tools for smart risk management in trading</Subtitle>
-      <Form onSubmit={handleSubmit}>
+    <Container theme={theme}>
+      <Title theme={theme}>Stop Loss & Take Profit Calculators</Title>
+      <Subtitle theme={theme}>Professional tools for smart risk management in trading</Subtitle>
+      <Form onSubmit={handleSubmit} theme={theme}>
         <InputGroup>
           <Label htmlFor="ticker">Enter Ticker Symbol:</Label>
           <Input
@@ -154,6 +173,7 @@ function App() {
             value={ticker}
             onChange={(e) => setTicker(e.target.value.toUpperCase())}
             placeholder="e.g. NVDA"
+            theme={theme}
             required
           />
         </InputGroup>
@@ -165,10 +185,11 @@ function App() {
             step="0.01"
             value={entryPrice}
             onChange={(e) => setEntryPrice(Number(e.target.value))}
+            theme={theme}
             required
           />
         </InputGroup>
-        <SubmitButton type="submit">
+        <SubmitButton type="submit" theme={theme}>
           Fetch Stock Data
         </SubmitButton>
       </Form>
