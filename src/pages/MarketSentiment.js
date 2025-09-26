@@ -488,6 +488,20 @@ function MarketSentiment() {
   const [marketData, setMarketData] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
+  // Auto-refresh mechanism
+  useEffect(() => {
+    // Initial fetch
+    fetchSentiment();
+    
+    // Set up auto-refresh every 5 minutes (300,000ms)
+    const refreshInterval = setInterval(() => {
+      fetchSentiment();
+    }, 5 * 60 * 1000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(refreshInterval);
+  }, []);
+
   const getGaugeColor = (score) => {
     if (score >= 75) return '#dc2626'; // Red for Extreme Greed
     if (score >= 50) return '#f59e0b'; // Orange for Greed
@@ -625,6 +639,28 @@ function MarketSentiment() {
       session = 'Market Closed';
     }
     
+    // Calculate next market open with better logic
+    let nextOpen;
+    if (isWeekday) {
+      if (currentTime < marketOpen) {
+        nextOpen = 'Today 9:30 AM EST';
+      } else {
+        // Market closed for the day, next open is tomorrow or Monday
+        if (dayOfWeek === 5) { // Friday
+          nextOpen = 'Monday 9:30 AM EST';
+        } else {
+          nextOpen = 'Tomorrow 9:30 AM EST';
+        }
+      }
+    } else {
+      // Weekend
+      if (dayOfWeek === 0) { // Sunday  
+        nextOpen = 'Tomorrow 9:30 AM EST';
+      } else { // Saturday
+        nextOpen = 'Monday 9:30 AM EST';
+      }
+    }
+
     return {
       status,
       session,
@@ -633,8 +669,7 @@ function MarketSentiment() {
         hour12: true 
       }) + ' EST',
       timezone: 'EST',
-      nextOpen: isWeekday && currentTime > marketClose ? 'Tomorrow 9:30 AM EST' : 
-                !isWeekday ? 'Monday 9:30 AM EST' : 'Today 9:30 AM EST'
+      nextOpen
     };
   };
 
@@ -784,13 +819,26 @@ function MarketSentiment() {
       setScore(data.score);
       setLabel(data.label);
       setMarketData(data);
-      setLastUpdated(new Date().toLocaleTimeString());
+      
+      // Use market data timestamp if available, otherwise current time
+      const marketTimestamp = data.timestamp ? 
+        new Date(data.timestamp).toLocaleTimeString('en-US', {
+          timeZone: 'America/New_York',
+          hour12: true
+        }) + ' EST' :
+        new Date().toLocaleTimeString('en-US', {
+          timeZone: 'America/New_York', 
+          hour12: true
+        }) + ' EST';
+      
+      setLastUpdated(marketTimestamp);
     } catch (e) {
       console.error('Sentiment fetch error:', e); // Debug log
       setError("Failed to fetch sentiment.");
       setScore(null);
       setLabel("");
       setMarketData(null);
+      setLastUpdated(null);
     }
     setLoading(false);
   };
@@ -872,7 +920,9 @@ function MarketSentiment() {
               </StatusItem>
               <StatusItem theme={theme}>
                 <StatusLabel theme={theme}>Last Update</StatusLabel>
-                <StatusValue theme={theme}>{getMarketStatus().lastUpdate}</StatusValue>
+                <StatusValue theme={theme}>
+                  {lastUpdated || getMarketStatus().lastUpdate}
+                </StatusValue>
               </StatusItem>
             </StatusGrid>
           </MarketStatusCard>
