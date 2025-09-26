@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Container = styled.div`
   padding: 40px;
   max-width: 1200px;
   margin: 0 auto;
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.background : props.theme?.colors?.light.background};
   min-height: 100vh;
+  transition: all 0.3s ease;
 `;
 const Header = styled.div`
   text-align: center;
@@ -16,32 +18,38 @@ const Title = styled.h1`
   font-size: 2.8rem;
   font-weight: 800;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: ${props => props.theme?.isDarkMode 
+    ? 'linear-gradient(135deg, #9f7aea 0%, #667eea 50%, #68d391 100%)' 
+    : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)'};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  transition: all 0.3s ease;
 `;
 const Subtitle = styled.p`
   font-size: 1.2rem;
-  color: #64748b;
+  color: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.textSecondary : props.theme?.colors?.light.textSecondary};
   font-weight: 500;
+  transition: color 0.3s ease;
 `;
 const FormCard = styled.div`
-  background: white;
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.cardBackground : props.theme?.colors?.light.cardBackground};
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 32px ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.shadow : 'rgba(99, 102, 241, 0.15)'};
   margin-bottom: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.border : props.theme?.colors?.light.border};
+  transition: all 0.3s ease;
 `;
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.cardBackground : props.theme?.colors?.light.cardBackground};
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.shadow : 'rgba(99, 102, 241, 0.15)'};
+  border: 1px solid ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.border : props.theme?.colors?.light.border};
+  transition: all 0.3s ease;
 `;
 const Th = styled.th`
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
@@ -54,12 +62,14 @@ const Th = styled.th`
 `;
 const Td = styled.td`
   padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.border : '#f1f5f9'};
   text-align: center;
   font-weight: 500;
+  color: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.text : props.theme?.colors?.light.text};
+  transition: all 0.3s ease;
   
   &:hover {
-    background: #f8fafc;
+    background: ${props => props.theme?.isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc'};
   }
 `;
 const Button = styled.button`
@@ -82,17 +92,22 @@ const Button = styled.button`
 const Input = styled.input`
   padding: 12px 16px;
   border-radius: 10px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid ${props => props.theme?.isDarkMode ? '#374151' : '#e5e7eb'};
   font-size: 1rem;
-  background: #f9fafb;
+  background: ${props => props.theme?.isDarkMode ? '#1f2937' : '#f9fafb'};
+  color: ${props => props.theme?.isDarkMode ? '#f8fafc' : '#374151'};
   min-width: 120px;
   transition: all 0.3s ease;
   
   &:focus {
     outline: none;
     border-color: #6366f1;
-    background: white;
+    background: ${props => props.theme?.isDarkMode ? '#111827' : 'white'};
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  &::placeholder {
+    color: ${props => props.theme?.isDarkMode ? '#9ca3af' : '#9ca3af'};
   }
 `;
 const RiskSummary = styled.div`
@@ -115,6 +130,7 @@ const RiskAmount = styled.span`
 `;
 
 function PortfolioDashboard() {
+  const { theme } = useTheme();
   const [positions, setPositions] = useState([]);
   const [form, setForm] = useState({ symbol: "", entry: "", stop: "", shares: "" });
 
@@ -148,18 +164,19 @@ function PortfolioDashboard() {
   };
 
   return (
-    <Container>
+    <Container theme={theme}>
       <Header>
         <Title>Portfolio Risk Dashboard</Title>
-        <Subtitle>Track your open positions, total risk exposure, and remaining risk budget</Subtitle>
+        <Subtitle theme={theme}>Track your open positions, total risk exposure, and remaining risk budget</Subtitle>
       </Header>
       
-      <FormCard>
-        <h3 style={{ marginBottom: '24px', color: '#374151', fontWeight: '700' }}>Add New Position</h3>
+      <FormCard theme={theme}>
+        <h3 style={{ marginBottom: '24px', color: theme?.isDarkMode ? '#f8fafc' : '#374151', fontWeight: '700' }}>Add New Position</h3>
         <form onSubmit={handleAdd} style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "end" }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#374151' }}>Symbol</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: theme?.isDarkMode ? '#f8fafc' : '#374151' }}>Symbol</label>
             <Input
+              theme={theme}
               name="symbol"
               value={form.symbol}
               onChange={handleChange}
@@ -167,8 +184,9 @@ function PortfolioDashboard() {
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#374151' }}>Entry Price</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: theme?.isDarkMode ? '#f8fafc' : '#374151' }}>Entry Price</label>
             <Input
+              theme={theme}
               name="entry"
               type="number"
               value={form.entry}
@@ -177,8 +195,9 @@ function PortfolioDashboard() {
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#374151' }}>Stop Loss</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: theme?.isDarkMode ? '#f8fafc' : '#374151' }}>Stop Loss</label>
             <Input
+              theme={theme}
               name="stop"
               type="number"
               value={form.stop}
@@ -187,8 +206,9 @@ function PortfolioDashboard() {
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#374151' }}># Shares</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: theme?.isDarkMode ? '#f8fafc' : '#374151' }}># Shares</label>
             <Input
+              theme={theme}
               name="shares"
               type="number"
               value={form.shares}
@@ -201,7 +221,7 @@ function PortfolioDashboard() {
       </FormCard>
 
       {positions.length > 0 && (
-        <Table>
+        <Table theme={theme}>
           <thead>
             <tr>
               <Th>Symbol</Th>
@@ -216,13 +236,13 @@ function PortfolioDashboard() {
           <tbody>
             {positions.map((pos, idx) => (
               <tr key={idx}>
-                <Td style={{ fontWeight: '700', color: '#6366f1' }}>{pos.symbol}</Td>
-                <Td>${pos.entry.toFixed(2)}</Td>
-                <Td>${pos.stop.toFixed(2)}</Td>
-                <Td>{pos.shares}</Td>
-                <Td>${(pos.entry - pos.stop).toFixed(2)}</Td>
-                <Td style={{ fontWeight: '700', color: '#ef4444' }}>${((pos.entry - pos.stop) * pos.shares).toFixed(2)}</Td>
-                <Td>
+                <Td theme={theme} style={{ fontWeight: '700', color: theme?.isDarkMode ? '#818cf8' : '#6366f1' }}>{pos.symbol}</Td>
+                <Td theme={theme}>${pos.entry.toFixed(2)}</Td>
+                <Td theme={theme}>${pos.stop.toFixed(2)}</Td>
+                <Td theme={theme}>{pos.shares}</Td>
+                <Td theme={theme}>${(pos.entry - pos.stop).toFixed(2)}</Td>
+                <Td theme={theme} style={{ fontWeight: '700', color: theme?.isDarkMode ? '#f87171' : '#ef4444' }}>${((pos.entry - pos.stop) * pos.shares).toFixed(2)}</Td>
+                <Td theme={theme}>
                   <Button danger onClick={() => handleRemove(idx)}>
                     Remove
                   </Button>
@@ -234,7 +254,7 @@ function PortfolioDashboard() {
       )}
 
       <RiskSummary>
-        <h2 style={{ marginBottom: '16px', color: '#374151', fontWeight: '700' }}>Total Portfolio Risk</h2>
+        <h2 style={{ marginBottom: '16px', color: theme?.isDarkMode ? '#f8fafc' : '#374151', fontWeight: '700' }}>Total Portfolio Risk</h2>
         <RiskAmount>${totalRisk.toFixed(2)}</RiskAmount>
       </RiskSummary>
     </Container>

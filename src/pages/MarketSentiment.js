@@ -680,13 +680,24 @@ function MarketSentiment() {
     console.log('getMarketFactors returned:', factors.length, 'factors');
     console.log('Current marketData:', marketData);
     
-    // FORCE USE REAL VIX DATA if we have sentiment data - bypass the normal factor check
-    if (score !== null && marketData && marketData.marketData) {
-      console.log('Force using real market data since we have sentiment score');
-      const vixData = marketData.marketData.find(d => d.symbol === 'VIX');
-      const spyData = marketData.marketData.find(d => d.symbol === 'SPY');
-      const qqqData = marketData.marketData.find(d => d.symbol === 'QQQ');
-      const diaData = marketData.marketData.find(d => d.symbol === 'DIA');
+    // FORCE USE REAL DATA if we have sentiment data and market data
+    if (score !== null && marketData) {
+      console.log('Processing market data for factors display');
+      
+      // Handle different API response structures
+      let apiMarketData = null;
+      if (marketData.marketData && Array.isArray(marketData.marketData)) {
+        apiMarketData = marketData.marketData;
+      } else if (Array.isArray(marketData)) {
+        apiMarketData = marketData;
+      }
+      
+      if (apiMarketData && apiMarketData.length > 0) {
+        console.log('Found market data array:', apiMarketData.map(d => d.symbol));
+        const vixData = apiMarketData.find(d => d.symbol === 'VIX');
+        const spyData = apiMarketData.find(d => d.symbol === 'SPY');
+        const qqqData = apiMarketData.find(d => d.symbol === 'QQQ');
+        const diaData = apiMarketData.find(d => d.symbol === 'DIA');
       
       if (vixData) {
         console.log('Using REAL VIX data:', vixData.currentPrice);
@@ -712,6 +723,7 @@ function MarketSentiment() {
             impact: vixData.currentPrice > 30 ? 'High Fear' : vixData.currentPrice < 20 ? 'Low Fear' : 'Moderate Fear'
           }
         ].filter(item => item !== null);
+      }
       }
     }
     
@@ -816,6 +828,7 @@ function MarketSentiment() {
     try {
       const data = await apiService.fetchSentiment();
       console.log('Sentiment API Response:', data); // Debug log
+      console.log('API marketData structure:', data.marketData);
       setScore(data.score);
       setLabel(data.label);
       setMarketData(data);

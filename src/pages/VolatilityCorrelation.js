@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { apiService } from "../services/apiService";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Container = styled.div`
   padding: 40px;
   max-width: 900px;
   margin: 0 auto;
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.background : props.theme?.colors?.light.background};
   min-height: 100vh;
+  transition: all 0.3s ease;
 `;
 const Header = styled.div`
   text-align: center;
@@ -18,52 +20,61 @@ const Title = styled.h1`
   font-size: 2.8rem;
   font-weight: 800;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: ${props => props.theme?.isDarkMode 
+    ? 'linear-gradient(135deg, #9f7aea 0%, #667eea 50%, #68d391 100%)' 
+    : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)'};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  transition: all 0.3s ease;
 `;
 const Subtitle = styled.p`
   font-size: 1.2rem;
-  color: #64748b;
+  color: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.textSecondary : props.theme?.colors?.light.textSecondary};
   font-weight: 500;
+  transition: color 0.3s ease;
 `;
 const FormCard = styled.div`
-  background: white;
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.cardBackground : props.theme?.colors?.light.cardBackground};
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 32px ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.shadow : 'rgba(99, 102, 241, 0.15)'};
   margin-bottom: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.border : props.theme?.colors?.light.border};
+  transition: all 0.3s ease;
 `;
 const Input = styled.input`
   padding: 12px 16px;
   border-radius: 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid ${props => props.theme?.isDarkMode ? '#4a5568' : '#e5e7eb'};
   margin-bottom: 16px;
   width: 100%;
   font-size: 1.2rem;
-  background: #f9fafb;
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.input : props.theme?.colors?.light.input};
+  color: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.text : props.theme?.colors?.light.text};
   transition: all 0.3s ease;
   text-align: center;
   font-weight: 700;
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.primary : props.theme?.colors?.light.primary};
+    background: ${props => props.theme?.isDarkMode ? '#2d3748' : 'white'};
+    box-shadow: 0 0 0 3px ${props => props.theme?.isDarkMode ? 'rgba(159, 122, 234, 0.1)' : 'rgba(99, 102, 241, 0.1)'};
   }
 `;
 const Label = styled.label`
   font-weight: 700;
   margin-bottom: 8px;
   display: block;
-  color: #374151;
+  color: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.text : props.theme?.colors?.light.text};
   font-size: 1rem;
+  transition: color 0.3s ease;
 `;
 const Button = styled.button`
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: ${props => props.theme?.isDarkMode 
+    ? 'linear-gradient(135deg, #9f7aea 0%, #667eea 100%)' 
+    : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'};
   color: white;
   border: none;
   border-radius: 12px;
@@ -74,7 +85,9 @@ const Button = styled.button`
   width: 100%;
   font-size: 1.1rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 16px ${props => props.theme?.isDarkMode 
+    ? 'rgba(159, 122, 234, 0.3)' 
+    : 'rgba(99, 102, 241, 0.3)'};
   
   &:hover {
     transform: translateY(-2px);
@@ -92,28 +105,33 @@ const Result = styled.div`
   font-weight: 700;
   margin-top: 24px;
   padding: 24px;
-  background: white;
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.cardBackground : props.theme?.colors?.light.cardBackground};
+  color: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.text : props.theme?.colors?.light.text};
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.shadow : 'rgba(99, 102, 241, 0.15)'};
+  border: 1px solid ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.border : props.theme?.colors?.light.border};
+  transition: all 0.3s ease;
 `;
 const MetricCard = styled.div`
-  background: white;
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.cardBackground : props.theme?.colors?.light.cardBackground};
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 32px ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.shadow : 'rgba(99, 102, 241, 0.15)'};
   margin-bottom: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.border : props.theme?.colors?.light.border};
+  transition: all 0.3s ease;
 `;
 const ChartCard = styled.div`
-  background: white;
+  background: ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.cardBackground : props.theme?.colors?.light.cardBackground};
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.shadow : 'rgba(99, 102, 241, 0.15)'};
+  border: 1px solid ${props => props.theme?.isDarkMode ? props.theme?.colors?.dark.border : props.theme?.colors?.light.border};
+  transition: all 0.3s ease;
 `;
 
 function VolatilityCorrelation() {
+  const { theme } = useTheme();
   const [symbol1, setSymbol1] = useState("AAPL");
   const [symbol2, setSymbol2] = useState("MSFT");
   const [data1, setData1] = useState([]);
@@ -178,17 +196,18 @@ function VolatilityCorrelation() {
   }));
 
   return (
-    <Container>
+    <Container theme={theme}>
       <Header>
         <Title>Volatility & Correlation Metrics</Title>
-        <Subtitle>Advanced analysis of price volatility and correlation between securities</Subtitle>
+        <Subtitle theme={theme}>Advanced analysis of price volatility and correlation between securities</Subtitle>
       </Header>
       
-      <FormCard>
+      <FormCard theme={theme}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           <div>
-            <Label htmlFor="symbol1">First Symbol:</Label>
+            <Label theme={theme} htmlFor="symbol1">First Symbol:</Label>
             <Input
+              theme={theme}
               id="symbol1"
               value={symbol1}
               onChange={e => setSymbol1(e.target.value.toUpperCase())}
@@ -196,8 +215,9 @@ function VolatilityCorrelation() {
             />
           </div>
           <div>
-            <Label htmlFor="symbol2">Second Symbol:</Label>
+            <Label theme={theme} htmlFor="symbol2">Second Symbol:</Label>
             <Input
+              theme={theme}
               id="symbol2"
               value={symbol2}
               onChange={e => setSymbol2(e.target.value.toUpperCase())}
@@ -212,8 +232,8 @@ function VolatilityCorrelation() {
       </FormCard>
 
       {volatility1 !== null && volatility2 !== null && (
-        <MetricCard>
-          <h3 style={{ marginBottom: '24px', color: '#374151', fontWeight: '700', textAlign: 'center' }}>📈 Volatility Analysis</h3>
+        <MetricCard theme={theme}>
+          <h3 style={{ marginBottom: '24px', color: theme?.isDarkMode ? '#e2e8f0' : '#374151', fontWeight: '700', textAlign: 'center' }}>📈 Volatility Analysis</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', textAlign: 'center' }}>
             <div style={{ padding: '20px', background: volatility1 > 0.03 ? '#fef2f2' : '#f0fdf4', borderRadius: '16px', border: `2px solid ${volatility1 > 0.03 ? '#fecaca' : '#bbf7d0'}` }}>
               <div style={{ fontSize: '1.5rem', fontWeight: '800', color: volatility1 > 0.03 ? '#ef4444' : '#10b981' }}>{symbol1}</div>
@@ -230,8 +250,8 @@ function VolatilityCorrelation() {
       )}
 
       {correlation !== null && (
-        <MetricCard>
-          <h3 style={{ marginBottom: '24px', color: '#374151', fontWeight: '700', textAlign: 'center' }}>🔗 Correlation Analysis</h3>
+        <MetricCard theme={theme}>
+          <h3 style={{ marginBottom: '24px', color: theme?.isDarkMode ? '#e2e8f0' : '#374151', fontWeight: '700', textAlign: 'center' }}>🔗 Correlation Analysis</h3>
           <div style={{ textAlign: 'center', padding: '20px', background: Math.abs(correlation) > 0.7 ? '#fef2f2' : '#f0fdf4', borderRadius: '16px', border: `2px solid ${Math.abs(correlation) > 0.7 ? '#fecaca' : '#bbf7d0'}` }}>
             <div style={{ fontSize: '3rem', fontWeight: '800', margin: '8px 0', color: Math.abs(correlation) > 0.7 ? '#ef4444' : '#10b981' }}>{correlation.toFixed(4)}</div>
             <div style={{ fontSize: '1.2rem', color: '#64748b', fontWeight: '600' }}>Correlation Coefficient</div>
@@ -243,22 +263,23 @@ function VolatilityCorrelation() {
       )}
 
       {data1.length > 0 && data2.length > 0 && (
-        <ChartCard>
-          <h3 style={{ marginBottom: '24px', color: '#374151', fontWeight: '700' }}>📈 Historical Price Comparison</h3>
+        <ChartCard theme={theme}>
+          <h3 style={{ marginBottom: '24px', color: theme?.isDarkMode ? '#e2e8f0' : '#374151', fontWeight: '700' }}>📈 Historical Price Comparison</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <XAxis 
                 dataKey="date" 
-                stroke="#64748b"
+                stroke={theme?.isDarkMode ? '#94a3b8' : '#64748b'}
               />
               <YAxis 
-                stroke="#64748b"
+                stroke={theme?.isDarkMode ? '#94a3b8' : '#64748b'}
                 tickFormatter={v => `$${v.toFixed(0)}`}
               />
               <Tooltip 
                 formatter={v => [`$${v?.toFixed(2)}`, '']}
                 contentStyle={{
-                  background: 'white',
+                  background: theme?.isDarkMode ? '#1e293b' : 'white',
+                  color: theme?.isDarkMode ? '#e2e8f0' : '#334155',
                   border: 'none',
                   borderRadius: '12px',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
